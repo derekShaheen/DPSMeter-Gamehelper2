@@ -134,7 +134,7 @@ namespace DPSMeter
                     ImGui.TableNextColumn(); ImGui.Checkbox("Show Sparkline", ref Settings.ShowSparkline);
 
                     ImGui.TableNextColumn(); ImGui.SetNextItemWidth(220);
-                    ImGui.SliderFloat("Big Number Scale", ref Settings.BigNumberScale, 0.8f, 2.0f);
+                    ImGui.SliderFloat("Big Number Size (pt)", ref Settings.BigNumberPointSize, 10f, 64f);
 
                     ImGui.TableNextColumn(); ImGui.SetNextItemWidth(220);
                     ImGui.DragFloat2("Anchor (x,y)", ref Settings.Anchor, 1f, -4000, 4000);
@@ -300,7 +300,14 @@ namespace DPSMeter
             float headerStrip = 6f;
             float lineH = ImGui.GetFontSize() * 1.1f;
             string bigText = Settings.HumanizeNumbers ? Humanize(rollingDps) : $"{rollingDps:0}";
-            Vector2 bigSz = MeasureTextScaled(bigText, Settings.BigNumberScale);
+
+            // --- big-number measurement using font-size ratio (no window scale) ---
+            float basePt = ImGui.GetFontSize(); // current font point size
+            float bigPt = MathF.Max(10f, Settings.BigNumberPointSize);
+            float ratio = bigPt / MathF.Max(0.001f, basePt);
+            Vector2 bigBase = ImGui.CalcTextSize(bigText);
+            Vector2 bigSz = bigBase * ratio;
+
             float rowsH = rows.Count > 0 ? rows.Count * (lineH + Settings.RowSpacing) - Settings.RowSpacing : 0f;
             bool showProg = (Settings.ShowRolling && Settings.ShowMax && maxRollingDps > 0f);
             float progH = showProg ? (Settings.ProgressHeight + 6f) : 0f;
@@ -318,7 +325,6 @@ namespace DPSMeter
                 float vw = ImGui.CalcTextSize(val).X;
                 valueWmax = MathF.Max(valueWmax, vw);
             }
-            // Note: we no longer reserve width for the progress-bar max text (it's not drawn anymore)
 
             float contentGap = 12f; // gap between left labels and right values
             float minContentW = MathF.Max(labelWmax + contentGap + valueWmax, bigSz.X);
@@ -350,9 +356,9 @@ namespace DPSMeter
             float contentRight = x + panelW - Settings.PanelPadding.X;
             float contentY = y + headerStrip + 6f;
 
-            // Big number (centered)
+            // Big number (centered) — draw using explicit font size
             var bigPos = new Vector2(x + (panelW - bigSz.X) * 0.5f, contentY);
-            AddTextShadow(dl, bigPos, Settings.ValueColor, bigText, Settings.ShadowAlpha);
+            AddTextShadowWithFontSize(dl, ImGui.GetFont(), Settings.ValueColor, bigText, bigPos, Settings.ShadowAlpha, bigPt);
 
             float cursorY = bigPos.Y + bigSz.Y + 6f;
 
@@ -422,7 +428,7 @@ namespace DPSMeter
                         var a = fillPts[i];
                         var b = new Vector2(fillPts[i].X, sy + sh);
                         var c = new Vector2(fillPts[i + 1].X, sy + sh);
-                        var d = fillPts[i + 1];
+                        var d = new Vector2(fillPts[i + 1].X, sy + sh - 0.01f);
                         dl.AddQuadFilled(a, d, c, b, WithAlpha(Settings.ValueColor, Settings.SparkFillAlpha));
                     }
                 }
@@ -441,22 +447,15 @@ namespace DPSMeter
             }
         }
 
-        private static void AddTextShadow(ImDrawListPtr dl, Vector2 pos, Vector4 color, string text, float shadowAlpha = 0.9f)
+        // Crisp text with explicit font size (no scaling the whole window)
+        private static void AddTextShadowWithFontSize(ImDrawListPtr dl, ImFontPtr font, Vector4 color, string text, Vector2 pos, float shadowAlpha, float pointSize)
         {
             uint sh = ImGuiHelper.Color(new Vector4(0, 0, 0, shadowAlpha));
-            dl.AddText(pos + new Vector2(1, 0), sh, text);
-            dl.AddText(pos + new Vector2(-1, 0), sh, text);
-            dl.AddText(pos + new Vector2(0, 1), sh, text);
-            dl.AddText(pos + new Vector2(0, -1), sh, text);
-            dl.AddText(pos, ImGuiHelper.Color(color), text);
-        }
-
-        private static Vector2 MeasureTextScaled(string text, float scale)
-        {
-            ImGui.SetWindowFontScale(scale);
-            var sz = ImGui.CalcTextSize(text);
-            ImGui.SetWindowFontScale(1f);
-            return sz;
+            dl.AddText(font, pointSize, pos + new Vector2(1, 0), sh, text);
+            dl.AddText(font, pointSize, pos + new Vector2(-1, 0), sh, text);
+            dl.AddText(font, pointSize, pos + new Vector2(0, 1), sh, text);
+            dl.AddText(font, pointSize, pos + new Vector2(0, -1), sh, text);
+            dl.AddText(font, pointSize, pos, ImGuiHelper.Color(color), text);
         }
 
         private static float Snap(float v) => (float)Math.Floor(v) + 0.5f;

@@ -13,14 +13,14 @@ namespace DPSMeter
         public float IdleResetSeconds = 4f;
         public float MinDamageSample = 0f;
 
-        public bool ShowRolling = true;
+        public bool ShowRolling = false;
         public bool ShowMax = true;
         public bool ShowSession = false;
         public bool ShowArea = false;
         public bool HumanizeNumbers = true;
         public bool ShowSparkline = true;
 
-        public float BigNumberScale = 1.25f;         // scale for the big Rolling DPS number
+        public float BigNumberPointSize = 24f;
         public Vector2 Anchor = new Vector2(1300f, 10f);
         public float PanelWidth = 300f;          // minimum width; auto-expands based on content
         public Vector2 PanelPadding = new Vector2(12f, 10f);
