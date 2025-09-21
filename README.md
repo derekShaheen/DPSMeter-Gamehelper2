@@ -1,4 +1,4 @@
-**DPSMeter** tracks and visualizes your **damage per second (DPS)** in real time, with multiple metrics and a modern overlay.
+**DPSMeter** tracks and visualizes your **damage per second (DPS)** using Gamehelper2 in Path of Exile 2 in real time, with multiple metrics and a modern overlay.
 
 ## :sparkles: Features
 * **Rolling DPS** – smoothed average over a configurable window (default: 8 seconds).
