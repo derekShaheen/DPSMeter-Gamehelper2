@@ -288,7 +288,7 @@ namespace DPSMeter
 
         private void DrawPanel(float rollingDps)
         {
-            var dl = ImGui.GetBackgroundDrawList();
+            var dl = ImGui.GetForegroundDrawList();
 
             // ----------- build data -----------
             rows.Clear();
